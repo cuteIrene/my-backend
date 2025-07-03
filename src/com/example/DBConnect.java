@@ -36,25 +36,24 @@ public class DBConnect {
      * @return ResultSet 查詢結果
      */
     public static ResultSet selectQuery(String query, Object... params) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            //連線
-            conn = DriverManager.getConnection(URL, USER, PASSWORD);
-            //下查詢語法
-            stmt = conn.prepareStatement(query);
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+        // 使用 getConnection()，會用環境變數
+        conn = getConnection();
+        stmt = conn.prepareStatement(query);
 
-            // 設定參數
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-
-            //執行查詢並回傳
-            return stmt.executeQuery(); // ⚠️ 注意：ResultSet 需要手動關閉
-        } catch (SQLException e) {
-            throw new RuntimeException("⚠️ 查詢失敗：" + e.getMessage(), e);
+        for (int i = 0; i < params.length; i++) {
+            stmt.setObject(i + 1, params[i]);
         }
+
+        return stmt.executeQuery();
+
+    } catch (SQLException e) {
+        throw new RuntimeException("⚠️ 查詢失敗：" + e.getMessage(), e);
     }
+}
+
     /*
     public static String selectQuery(String query, Object... params) {
         String str="";
@@ -70,38 +69,26 @@ public class DBConnect {
      * @return 受影響的行數
      */
     public static int executeUpdate(String query, Object... params) {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DriverManager.getConnection(URL, USER, PASSWORD);
-            stmt = conn.prepareStatement(query);
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    try {
+        conn = getConnection();
+        stmt = conn.prepareStatement(query);
 
-            // 設定參數
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-
-            return stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("⚠️ 資料更新失敗：" + e.getMessage(), e);
-        } finally {
-            // 確保資源被關閉
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+        for (int i = 0; i < params.length; i++) {
+            stmt.setObject(i + 1, params[i]);
         }
+
+        return stmt.executeUpdate();
+
+    } catch (SQLException e) {
+        throw new RuntimeException("⚠️ 資料更新失敗：" + e.getMessage(), e);
+    } finally {
+        if (stmt != null) try { stmt.close(); } catch (SQLException e) { e.printStackTrace(); }
+        if (conn != null) try { conn.close(); } catch (SQLException e) { e.printStackTrace(); }
     }
+}
+
 
     public static int getNextId(String tableName, String columnName) {
         try (ResultSet rs = DBConnect.selectQuery("SELECT MAX(" + columnName + ") FROM " + tableName)) {
