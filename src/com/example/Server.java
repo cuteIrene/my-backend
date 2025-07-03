@@ -51,7 +51,7 @@ public class Server {
         server.createContext("/api/2/reservations-tomorrow", new TomorrowReservationHandler());//撈隔天預約內容
         server.createContext("/api/2/check-reservation", new CheckReservationHandler());//確認尚未到來的預約資訊
         server.createContext("/api/2/insert-actual", new InsertActualHandler());//實際來店
-        server.createContext("/api/2/check-session", new ChessionHandler());//查詢剩餘堂數
+        server.createContext("/api/2/check-session", new CheckSessionHandler());//查詢剩餘堂數
 
         server.start();
         System.out.println("Server started at http://localhost:8000");
