@@ -500,24 +500,16 @@ public class Server {
    public static class VerifyMemberHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        Headers headers = exchange.getResponseHeaders();
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        headers.set("Access-Control-Allow-Headers", "Content-Type");
-
-        if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(204, -1); // No content
-            return;
-        }
-        
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
             handleCORSPreflight(exchange);
             return;
         }
 
         Headers headers = exchange.getResponseHeaders();
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "Content-Type");
         headers.set("Content-Type", "application/json; charset=utf-8");
-        headers.set("Access-Control-Allow-Origin", "*");  // ✅ 統一加在最前面
 
         if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
             String msg = "{\"error\":\"Method Not Allowed\"}";
@@ -564,6 +556,7 @@ public class Server {
         }
     }
 }
+
 
    public static class TomorrowReservationHandler implements HttpHandler {
     @Override
