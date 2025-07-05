@@ -23,6 +23,12 @@ import java.util.stream.Collectors;
 
 
 public class Server {
+    public static String escapeJson(String s) {
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+    }
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
 
@@ -100,13 +106,12 @@ public class Server {
         headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         headers.set("Access-Control-Allow-Headers", "Content-Type");
 
-        // Handle preflight OPTIONS request
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(204, -1); // No content
+            exchange.sendResponseHeaders(204, -1);
             return;
         }
 
-        String response = "HI Orsino";
+        String response = "";
         StringBuilder json = new StringBuilder();
         json.append("[");
 
@@ -130,13 +135,15 @@ public class Server {
                 }
                 json.append("}");
             }
-            rs.getStatement().getConnection().close();
-        } catch (Exception e) {
-            json = new StringBuilder("{\"error\":\"" + e.getMessage() + "\"}");
-        }
 
-        json.append("]");
-        response = json.toString();
+            rs.getStatement().getConnection().close();
+            json.append("]");
+            response = json.toString();
+
+        } catch (Exception e) {
+            // ✅ 正確的錯誤格式
+            response = "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}";
+        }
 
         byte[] responseBytes = response.getBytes("UTF-8");
         headers.set("Content-Type", "application/json; charset=utf-8");
@@ -145,6 +152,7 @@ public class Server {
         os.write(responseBytes);
         os.close();
     }
+
 
     private static String escapeJson(String s) {
         return s.replace("\\", "\\\\")
@@ -183,12 +191,13 @@ public class Server {
                     .append("\"Customer_ID\":\"").append(name).append("\"")
                     .append("}");
             }
-            rs.getStatement().getConnection().close(); // 手動關閉連線
+            rs.getStatement().getConnection().close();
+            json.append("]");
+            response = json.toString();
         } catch (Exception e) {
-            json = new StringBuilder("{\"error\":\"" + e.getMessage() + "\"}");
+            response = "{\"error\":\"" + escapeJson(e.getMessage()) + "\"}";
         }
 
-            json.append("]");
             response = json.toString();
             
             exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");                  
@@ -491,6 +500,16 @@ public class Server {
    public static class VerifyMemberHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        Headers headers = exchange.getResponseHeaders();
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "Content-Type");
+
+        if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(204, -1); // No content
+            return;
+        }
+        
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
             handleCORSPreflight(exchange);
             return;
